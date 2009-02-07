@@ -1,0 +1,84 @@
+
+Let's create an egg to use it in our tests::
+
+    >>> mkdir('myegg')
+    >>> write('myegg', 'setup.py',
+    ... '''
+    ... from setuptools import setup
+    ... setup(name='myegg', version='1.0',)
+    ... ''')
+    >>> write('myegg', 'README', '')
+    >>> print system(buildout+' setup myegg bdist_egg'), # doctest: +ELLIPSIS
+    Running setup script 'myegg/setup.py'.
+    ...
+
+Now let's create a buildout to install the egg and to use 
+buildout.dumppickedversions::
+
+    >>> write('buildout.cfg',
+    ... '''
+    ... [buildout]
+    ... extensions = buildout.dumppickedversions
+    ... parts = foo
+    ... find-links = %s
+    ... index = http://pypi.python.org/simple
+    ... [foo]
+    ... recipe = zc.recipe.egg
+    ... eggs = myegg
+    ... ''' % join('myegg', 'dist'))
+
+Running the buildout will print information about picked versions::
+
+    >>> print system(buildout), # doctest: +ELLIPSIS
+    Getting distribution for 'buildout.dumppickedversions'.
+    ...
+    *************** PICKED VERSIONS ****************
+    [buildout]
+    <BLANKLINE>
+    versions = versions
+    <BLANKLINE>
+    [versions]
+    zc.buildout = N.N
+    zc.recipe.egg = N.N
+    myegg = N.N
+    setuptools = N.N
+    <BLANKLINE>
+    *************** /PICKED VERSIONS ***************
+
+We can get a file with the picked versions. We just add an 
+``dump-picked-versions-file`` option and give a file name::
+    
+    >>> write('buildout.cfg',
+    ... '''
+    ... [buildout]
+    ... extensions = buildout.dumppickedversions
+    ... dump-picked-versions-file = versions.cfg
+    ... parts = foo
+    ... find-links = 
+    ...     %s
+    ... index = http://pypi.python.org/simple
+    ... [foo]
+    ... recipe = zc.recipe.egg
+    ... eggs = 
+    ...     myegg 
+    ... ''' % join('myegg', 'dist'))
+    
+    >>> print system(buildout), # doctest: +ELLIPSIS
+    Uninstalling foo.
+    Installing foo.
+    Writing picked versions to versions.cfg
+
+And here is the content of the file versions.cfg::
+    
+    >>> cat('versions.cfg')
+    [buildout]
+    <BLANKLINE>
+    versions = versions
+    <BLANKLINE>
+    [versions]
+    zc.buildout = N.N
+    zc.recipe.egg = N.N
+    myegg = N.N
+    setuptools = N.N
+    <BLANKLINE>
+
