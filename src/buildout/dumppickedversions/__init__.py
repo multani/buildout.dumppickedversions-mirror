@@ -37,7 +37,7 @@ def dump_picked_versions(old_logging_shutdown, file_name=None):
             if os.path.exists(file_name):
                 print "*************************************"
                 print "File %s already exists." % file_name                 
-                print "Please remove it to get a freash copy"                 
+                print "Please remove it to get a fresh copy"                
                 print "*************************************"
             else:
                 print "Writing picked versions to %s" % file_name
