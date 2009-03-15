@@ -25,7 +25,11 @@ buildout.dumppickedversions options
 
 dump-picked-versions-file
     A file name you want ``buildout.dumppickedversions`` to write to.
-    If not given ``buildout.dumppickedversions`` will dump the results to the 
+    If not given ``buildout.dumppickedversions`` will dump the versions to the 
     screen.
 
+overwrite-picked-versions-file
+    If set to ``true``, ``buildout.dumppickedversions`` will overwrite the file 
+    defined in ``dump-picked-versions-file`` if it exists. Defaults to True. 
+    
 
