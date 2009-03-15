@@ -33,10 +33,6 @@ Running the buildout will print information about picked versions::
     Getting distribution for 'buildout.dumppickedversions'.
     ...
     *************** PICKED VERSIONS ****************
-    [buildout]
-    <BLANKLINE>
-    versions = versions
-    <BLANKLINE>
     [versions]
     zc.buildout = N.N
     zc.recipe.egg = N.N
@@ -45,8 +41,8 @@ Running the buildout will print information about picked versions::
     <BLANKLINE>
     *************** /PICKED VERSIONS ***************
 
-We can get a file with the picked versions. We just add an 
-``dump-picked-versions-file`` option and give a file name::
+To dump picked versions to a file, we just add an ``dump-picked-versions-file`` 
+option and give a file name::
     
     >>> write('buildout.cfg',
     ... '''
@@ -66,19 +62,50 @@ We can get a file with the picked versions. We just add an
     >>> print system(buildout), # doctest: +ELLIPSIS
     Uninstalling foo.
     Installing foo.
+    *********************************************
     Writing picked versions to versions.cfg
+    *********************************************
 
 And here is the content of the file versions.cfg::
     
     >>> cat('versions.cfg')
-    [buildout]
-    <BLANKLINE>
-    versions = versions
-    <BLANKLINE>
     [versions]
     zc.buildout = N.N
     zc.recipe.egg = N.N
     myegg = N.N
     setuptools = N.N
     <BLANKLINE>
+
+Next time we run the buildout the file will be overwritten::
+
+    >>> print system(buildout), # doctest: +ELLIPSIS
+    Updating foo.
+    *********************************************
+    Overwriting versions.cfg
+    *********************************************
+    
+When we don't want to overwrite the file we just add an 
+``overwrite-picked-versions-file`` and set it to false::
+
+    >>> write('buildout.cfg',
+    ... '''
+    ... [buildout]
+    ... extensions = buildout.dumppickedversions
+    ... dump-picked-versions-file = versions.cfg
+    ... overwrite-picked-versions-file = false
+    ... parts = foo
+    ... find-links = 
+    ...     %s
+    ... index = http://pypi.python.org/simple
+    ... [foo]
+    ... recipe = zc.recipe.egg
+    ... eggs = 
+    ...     myegg 
+    ... ''' % join('myegg', 'dist'))
+    
+    >>> print system(buildout), # doctest: +ELLIPSIS
+    Updating foo.
+    *********************************************
+    Skipped: File versions.cfg already exists.
+    *********************************************
 
