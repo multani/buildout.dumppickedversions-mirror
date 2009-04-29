@@ -33,7 +33,7 @@ def dump_picked_versions(old_logging_shutdown, file_name, overwrite):
     def logging_shutdown():
 
         picked_versions = '[versions]\n'
-        for d, v in zc.buildout.easy_install.Installer.__picked_versions.items():
+        for d, v in sorted(zc.buildout.easy_install.Installer.__picked_versions.items()):
             picked_versions += "%s = %s\n" % (d, v)
 
         if file_name is not None:
