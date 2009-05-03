@@ -15,7 +15,7 @@ def _log_requirement(ws, req):
         if req in dist.requires():
             req_ = str(req)
             dist_ = str(dist)
-            if req_ in required_by:
+            if req_ in required_by and dist_ not in required_by[req_]:
                 required_by[req_].append(dist_)
             else:
                 required_by[req_] = [dist_]
