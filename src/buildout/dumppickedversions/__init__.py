@@ -1,21 +1,26 @@
-"""If it goes in zc.buildout this work will be reduced to 3 lines:
-
-# add an attribute in zc.buildout.easy_install.Installer:
-__picked_versions = {} 
-
-# in the last loop in zc.buildout.easy_install.Installer._get_dist method:
-self.__picked_versions[dist.project_name] = dist.version 
-
-#in the end of zc.buildout/buildout.py file
-print zc.buildout.easy_install.Installer.__picked_versions 
-
-"""
-
 import os
 import sys
 import logging
 import zc.buildout.easy_install
 import pkg_resources
+
+logger = zc.buildout.easy_install.logger
+
+required_by = {}
+
+def _log_requirement(ws, req):
+    ws = list(ws)
+    ws.sort()
+    for dist in ws:
+        if req in dist.requires():
+            req_ = str(req)
+            dist_ = str(dist)
+            if req_ in required_by:
+                required_by[req_].append(dist_)
+            else:
+                required_by[req_] = [dist_]
+            logger.debug("  required by %s." % dist)
+
 
 def enable_dumping_picked_versions(old_get_dist):
     def get_dist(self, requirement, ws, always_unzip):
@@ -32,9 +37,16 @@ def dump_picked_versions(old_logging_shutdown, file_name, overwrite):
 
     def logging_shutdown():
 
-        picked_versions = '[versions]\n'
+        picked_versions_top = '[versions]\n'
+        picked_versions_bottom = ''
         for d, v in sorted(zc.buildout.easy_install.Installer.__picked_versions.items()):
-            picked_versions += "%s = %s\n" % (d, v)
+            if d in required_by:
+                req_ = "\n#Required by:\n#" + "\n#".join(required_by[d]) + "\n"
+                picked_versions_bottom += "%s%s = %s\n" % (req_, d, v)
+            else:
+                picked_versions_top += "%s = %s\n" % (d, v)
+
+        picked_versions = picked_versions_top + picked_versions_bottom
 
         if file_name is not None:
             if not os.path.exists(file_name):
@@ -55,6 +67,7 @@ def dump_picked_versions(old_logging_shutdown, file_name, overwrite):
             print "*************** PICKED VERSIONS ****************"
             print picked_versions
             print "*************** /PICKED VERSIONS ***************"
+
         old_logging_shutdown()    
     return logging_shutdown
 
@@ -70,7 +83,7 @@ def install(buildout):
                 in ['yes', 'true', 'on']
 
     zc.buildout.easy_install.Installer.__picked_versions = {}
-    
+    zc.buildout.easy_install._log_requirement = _log_requirement
     zc.buildout.easy_install.Installer._get_dist = enable_dumping_picked_versions(
                                   zc.buildout.easy_install.Installer._get_dist)
     

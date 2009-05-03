@@ -34,10 +34,10 @@ Running the buildout will print information about picked versions::
     ...
     *************** PICKED VERSIONS ****************
     [versions]
-    zc.buildout = N.N
-    zc.recipe.egg = N.N
     myegg = N.N
     setuptools = N.N
+    zc.buildout = N.N
+    zc.recipe.egg = N.N
     <BLANKLINE>
     *************** /PICKED VERSIONS ***************
 
@@ -70,10 +70,10 @@ And here is the content of the file versions.cfg::
     
     >>> cat('versions.cfg')
     [versions]
-    zc.buildout = N.N
-    zc.recipe.egg = N.N
     myegg = N.N
     setuptools = N.N
+    zc.buildout = N.N
+    zc.recipe.egg = N.N
     <BLANKLINE>
 
 Next time we run the buildout the file will be overwritten::
@@ -108,4 +108,52 @@ When we don't want to overwrite the file we just add an
     *********************************************
     Skipped: File versions.cfg already exists.
     *********************************************
+    
+If an eggA is installed as requirment for other eggs, you will get a comment
+line just before eggA with the list of eggs that required it.
+
+Let's show an example. We will install zope.component::
+
+    >>> write('buildout.cfg',
+    ... '''
+    ... [buildout]
+    ... extensions = buildout.dumppickedversions
+    ... dump-picked-versions-file = versions.cfg
+    ... parts = foo
+    ... index = http://pypi.python.org/simple
+    ... [foo]
+    ... recipe = zc.recipe.egg
+    ... eggs = zope.component 
+    ... ''')
+    
+    >>> print system(buildout), # doctest: +ELLIPSIS
+    Uninstalling foo.
+    Installing foo.
+    Getting distribution for 'zope.component'.
+    ...
+    *********************************************
+    Overwriting versions.cfg
+    *********************************************
+
+and let's see the content of the versions.cfg file::
+
+    >>> cat('versions.cfg')
+    [versions]
+    zc.buildout = N.N
+    zc.recipe.egg = N.N
+    zope.component = N.N
+    <BLANKLINE>
+    #Required by:
+    #zope.event N.N
+    #zope.interface N.N
+    #zope.component N.N
+    setuptools = N.N
+    <BLANKLINE>
+    #Required by:
+    #zope.component N.N
+    zope.event = N.N
+    <BLANKLINE>
+    #Required by:
+    #zope.component N.N
+    zope.interface = N.N
 

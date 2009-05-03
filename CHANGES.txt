@@ -1,10 +1,11 @@
 Change history
 ==============
 
-0.3 (unreleased)
+0.3 (2009-05-03)
 ----------------
 
--
+- Added comments in the generated versions file about what eggs
+  required the picked egg if any. [mustapha]
 
 0.2 (2009-03-15)
 ----------------

@@ -13,7 +13,8 @@ from zope.testing import renormalizing
 
 current_dir = os.path.abspath(os.path.dirname(__file__))
 
-normalize_version = (re.compile('= [0-9a-zA-Z -_]+([.][0-9a-zA-Z-_]+)+'), '= N.N')
+normalize_version1 = (re.compile('= [0-9a-zA-Z -_]+([.][0-9a-zA-Z-_]+)+'), '= N.N')
+normalize_version2 = (re.compile('(#[^ ]*?) [0-9a-zA-Z -_]+([.][0-9a-zA-Z-_]+)+'), '\\1 N.N')
 
 def doc_suite(test_dir, setUp=zc.buildout.testing.buildoutSetUp, tearDown=zc.buildout.testing.buildoutTearDown, globs=None):
     """Returns a test suite, based on doctests found in /doctest."""
@@ -38,7 +39,7 @@ def doc_suite(test_dir, setUp=zc.buildout.testing.buildoutSetUp, tearDown=zc.bui
         suite.append(doctest.DocFileSuite(test, optionflags=flags, 
                                           globs=globs, setUp=setUp, 
                                           tearDown=tearDown,
-                                          checker=renormalizing.RENormalizing([normalize_version]),
+                                          checker=renormalizing.RENormalizing([normalize_version1, normalize_version2]),
                                           module_relative=False))
 
     return unittest.TestSuite(suite)
