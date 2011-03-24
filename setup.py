@@ -48,7 +48,7 @@ setup(name='buildout.dumppickedversions',
                         'zc.buildout'
                         ],
       tests_require=tests_require,
-      extras_require=dict(tests=tests_require),
+      extras_require=dict(test=tests_require),
       test_suite = 'buildout.dumppickedversions.tests.test_suite',
       entry_points=entry_points,
       )
