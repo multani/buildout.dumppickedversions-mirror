@@ -1,0 +1,3 @@
+YOU MUST USE SETUPTOOLS AND NOT DISTRIBUTE!
+
+Otherwise, tests fail mysteriously, I warned you.
