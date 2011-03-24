@@ -35,10 +35,18 @@ def doc_suite(test_dir, setUp=zc.buildout.testing.buildoutSetUp, tearDown=zc.bui
     docs = [os.path.join(doctest_dir, doc) for doc in
             os.listdir(doctest_dir) if doc.endswith('.txt')]
 
+    def test_setUp(test):
+        setUp(test)
+        # Install the current buildout.dumppickedversions package into the test,
+        # so we test this one, not an official one from Pypi or whatever.
+        # Warning: in the tests, Buildout will use this package as a developed
+        # one.
+        zc.buildout.testing.install('buildout.dumppickedversions', test)
+
     for test in docs:
-        suite.append(doctest.DocFileSuite(test, optionflags=flags, 
-                                          globs=globs, setUp=setUp, 
-                                          tearDown=tearDown,
+        suite.append(doctest.DocFileSuite(test, optionflags=flags,
+                                          globs=globs,
+                                          setUp=test_setUp, tearDown=tearDown,
                                           checker=renormalizing.RENormalizing([normalize_version1, normalize_version2]),
                                           module_relative=False))
 

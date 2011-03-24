@@ -30,8 +30,7 @@ buildout.dumppickedversions::
 Running the buildout will print information about picked versions::
 
     >>> print system(buildout), # doctest: +ELLIPSIS
-    Getting distribution for 'buildout.dumppickedversions'.
-    ...
+    Getting distribution for ...
     *************** PICKED VERSIONS ****************
     [versions]
     myegg = N.N
