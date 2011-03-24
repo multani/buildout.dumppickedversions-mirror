@@ -12,8 +12,10 @@ def _log_requirement(ws, req):
     ws = list(ws)
     ws.sort()
     for dist in ws:
-        if req in dist.requires():
-            req_ = str(req)
+        # req can be "foo" or "foo==1.0", as well as the contents of
+        # dist.requires(), so be sure to compare just the names!
+        req_ = req.key.lower()
+        if req_ in [dep.key.lower() for dep in dist.requires()]:
             dist_ = str(dist)
             if req_ in required_by and dist_ not in required_by[req_]:
                 required_by[req_].append(dist_)
@@ -39,8 +41,8 @@ def dump_picked_versions(old_logging_shutdown, file_name, overwrite):
         picked_versions_top = '[versions]\n'
         picked_versions_bottom = ''
         for d, v in sorted(zc.buildout.easy_install.Installer.__picked_versions.items()):
-            if d in required_by:
-                req_ = "\n#Required by:\n#" + "\n#".join(required_by[d]) + "\n"
+            if d.lower() in required_by:
+                req_ = "\n#Required by:\n#" + "\n#".join(required_by[d.lower()]) + "\n"
                 picked_versions_bottom += "%s%s = %s\n" % (req_, d, v)
             else:
                 picked_versions_top += "%s = %s\n" % (d, v)
