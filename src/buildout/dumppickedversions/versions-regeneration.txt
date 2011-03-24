@@ -1,0 +1,173 @@
+``buildout.dumppickedversions`` can be used to generate, pin and upgrade easily
+the versions of the packages used by a project once it's started.
+
+As long as the versions dependenciees don't change, the output of the extension
+will be stable.
+
+
+The scenario is as follow:
+
+#. Create a new project, without any version pinning and use the
+   ``buildout.dumppickedversions`` extension to dump the versions Buildout has
+   retrieved;
+
+#. Now, extend the versions' file generated and pin the versions of you package
+with the version pinning feature of Buildout
+
+#. You can now add to your source code repository the versions' file and you
+will be able to track and update the versions dependencies of your project
+easily, just by tweaking the versions' file as needed.
+
+Let's look at this example.
+
+We have two eggs, one depending on the other:
+
+    >>> mkdir('egg_a')
+    >>> write('egg_a', 'setup.py',
+    ... '''
+    ... from setuptools import setup
+    ... setup(name='egg_a', version='1.0')
+    ... ''')
+    >>> print system(buildout + ' setup egg_a bdist_egg') # doctest: +ELLIPSIS
+    Running setup script 'egg_a/setup.py'.
+    ...
+
+``egg_b`` will depend on ``egg_a``:
+    >>> mkdir('egg_b')
+    >>> write('egg_b', 'setup.py',
+    ... '''
+    ... from setuptools import setup
+    ... setup(name='egg_b', version='1.0',
+    ...       install_requires=['egg_a'])
+    ... ''')
+    >>> print system(buildout + ' setup egg_b bdist_egg') # doctest: +ELLIPSIS
+    Running setup script 'egg_b/setup.py'.
+    ...
+
+Now, let's generate a Buildout configuration file. We use the
+``buildout.dumppickedversions`` extension and we dump the versions in a file,
+but we do not pin yet the versions in Buildout:
+
+    >>> buildout_content = '''
+    ... [foo]
+    ... recipe = zc.recipe.egg
+    ... eggs = egg_b
+    ...
+    ... [buildout]
+    ... extensions = buildout.dumppickedversions
+    ... dump-picked-versions-file = versions.cfg
+    ... parts = foo
+    ... find-links = %s
+    ...              %s
+    ... index = http://pypi.python.org/simple
+    ...
+    ... ''' % (
+    ...     join('egg_a', 'dist'),
+    ...     join('egg_b', 'dist'))
+
+    >>> write('buildout.cfg', buildout_content)
+    >>> print system(buildout), # doctest: +ELLIPSIS
+    Getting distribution for ...
+    ...
+    Installing foo.
+    Getting distribution for 'egg-b'.
+    Got egg-b 1.0.
+    Getting distribution for 'egg-a'.
+    Got egg-a 1.0.
+    *********************************************
+    Writing picked versions to versions.cfg
+    *********************************************
+    >>> cat('versions.cfg')
+    [versions]
+    egg-b = 1.0
+    setuptools = N.N
+    zc.buildout = N.N
+    zc.recipe.egg = N.N
+    <BLANKLINE>
+    #Required by:
+    #egg-b 1.0
+    egg-a = 1.0
+
+Let's update the Buildout configuration file slightly, so we now extend the
+generated ``versions.cfg`` file, and we use the ``versions`` information inside
+to pin the versions of the packages we use:
+
+    >>> write('buildout.cfg', buildout_content + '''
+    ... extends = versions.cfg
+    ... versions = versions
+    ... ''')
+
+We can relaunch Buildout and the versions' file doesn't change:
+
+.. This is a regression test.
+
+    >>> print system(buildout), # doctest: +ELLIPSIS
+    Updating foo.
+    *********************************************
+    Overwriting versions.cfg
+    *********************************************
+    >>> cat('versions.cfg')
+    [versions]
+    egg-b = 1.0
+    setuptools = N.N
+    zc.buildout = N.N
+    zc.recipe.egg = N.N
+    <BLANKLINE>
+    #Required by:
+    #egg-b 1.0
+    egg-a = 1.0
+
+If a new version of an egg is available, the pinning process of Buildout will
+work:
+
+    >>> write('egg_a', 'setup.py',
+    ... '''
+    ... from setuptools import setup
+    ... setup(name='egg_a', version='2.0')
+    ... ''')
+    >>> print system(buildout + ' setup egg_a bdist_egg') # doctest: +ELLIPSIS
+    Running setup script 'egg_a/setup.py'.
+    ...
+    >>> print system(buildout), # doctest: +ELLIPSIS
+    Updating foo.
+    *********************************************
+    Overwriting versions.cfg
+    *********************************************
+    >>> cat('versions.cfg')
+    [versions]
+    egg-b = 1.0
+    setuptools = N.N
+    zc.buildout = N.N
+    zc.recipe.egg = N.N
+    <BLANKLINE>
+    #Required by:
+    #egg-b 1.0
+    egg-a = 1.0
+
+If a package version is changed in the ``versions.cfg`` file, the new version is
+taken:
+
+    >>> write('versions.cfg', '''
+    ... [versions]
+    ... egg-a = 2.0      # Now requires version 2.0
+    ... egg-b = 1.0
+    ... # Omitting other packages, this is irrelevant for the test,
+    ... # and we can't guess them easily.
+    ... ''')
+    >>> print system(buildout), # doctest: +ELLIPSIS
+    Updating foo.
+    Getting distribution for 'egg-a==2.0'.
+    Got egg-a 2.0.
+    *********************************************
+    Overwriting versions.cfg
+    *********************************************
+    >>> cat('versions.cfg')
+    [versions]
+    egg-b = 1.0
+    setuptools = N.N
+    zc.buildout = N.N
+    zc.recipe.egg = N.N
+    <BLANKLINE>
+    #Required by:
+    #egg-b 1.0
+    egg-a = 2.0
