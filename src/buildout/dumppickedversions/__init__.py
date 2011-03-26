@@ -11,10 +11,12 @@ required_by = {}
 def _log_requirement(ws, req):
     ws = list(ws)
     ws.sort()
+
+    # req can be "foo" or "foo==1.0", as well as the contents of
+    # dist.requires(), so be sure to compare just the names!
+    req_ = req.key.lower()
+
     for dist in ws:
-        # req can be "foo" or "foo==1.0", as well as the contents of
-        # dist.requires(), so be sure to compare just the names!
-        req_ = req.key.lower()
         if req_ in [dep.key.lower() for dep in dist.requires()]:
             dist_ = str(dist)
             if req_ in required_by and dist_ not in required_by[req_]:
